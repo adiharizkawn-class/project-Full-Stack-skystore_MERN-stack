@@ -37,10 +37,16 @@ app.get("/api/health", (req, res) => {
 });
 
 // 3. Frontend Static Files (Hanya jika kamu menyatukan build di Express)
+// Baris ini membaca folder hasil build dari frontend Vite kamu
 app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
-// 4. Koneksi DB + Jalankan Server
-// Kita buat koneksi database berjalan otomatis di setiap request jika belum terhubung
+// 4. Catch-All Route untuk Frontend (PENTING: Harus di bawah routes API & static files)
+// Ini berguna agar saat user refresh halaman seperti /login atau /dashboard, halaman tidak 404
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/dist", "index.html"));
+});
+
+// 5. Koneksi DB + Jalankan Server
 mongoose
   .connect(MONGO_URI)
   .then(() => console.log("✅ Berhasil terhubung ke MongoDB"))
@@ -51,5 +57,5 @@ app.listen(PORT, () => {
   console.log(`🚀 Server berjalan di port ${PORT}`);
 });
 
-// 5. Export App (WAJIB untuk Vercel Serverless Function)
+// 6. Export App (WAJIB untuk Vercel Serverless Function)
 module.exports = app;
