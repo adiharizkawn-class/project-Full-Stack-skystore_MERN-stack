@@ -13,13 +13,11 @@ const Login = () => {
     setError("");
 
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/auth/login",
-        {
-          username,
-          password,
-        },
-      );
+      // Menggunakan relative path agar otomatis menembak ke domain Vercel tempatnya berada
+      const response = await axios.post("/api/auth/login", {
+        username,
+        password,
+      });
 
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data.user));

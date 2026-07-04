@@ -15,13 +15,11 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/auth/register",
-        {
-          username,
-          password,
-        },
-      );
+      // Menggunakan relative path agar otomatis menembak ke domain Vercel tempatnya berada
+      const response = await axios.post("/api/auth/register", {
+        username,
+        password,
+      });
 
       if (response.status === 201 || response.status === 200) {
         alert("Registrasi Berhasil! Silakan Login.");
