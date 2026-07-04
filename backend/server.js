@@ -10,13 +10,17 @@ const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: "*", // Diubah ke "*" agar lebih fleksibel saat dideploy
+    origin: "*", // Mengizinkan semua domain (sangat aman untuk deployment Vercel Services)
     credentials: true,
   }),
 );
 
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI;
+
+// Masukkan URL MongoDB Atlas asli kamu di sebelah kanan tanda || sebagai cadangan keamanan jika .env Vercel kosong
+const MONGO_URI =
+  process.env.MONGO_URI ||
+  "mongodb+srv://adi_db_user:db_user152689@cluster0.vmqbuyj.mongodb.net/?appName=Cluster0";
 
 // 2. Routes API (WAJIB di atas route frontend statis)
 const authRoutes = require("./routes/authRoutes");
@@ -29,37 +33,23 @@ app.use("/api/orders", orderRoutes);
 
 // Base route untuk API check
 app.get("/api/health", (req, res) => {
-  res.send("Halo selamat datang di backend skystore");
+  res.status(200).json({ message: "Halo selamat datang di backend skystore" });
 });
 
-// 3. Frontend Static Files (Untuk menyajikan hasil build React)
-// Mengarahkan Express untuk membaca file statis dari folder build React
+// 3. Frontend Static Files (Hanya jika kamu menyatukan build di Express)
 app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
-// Menangani semua request halaman selain API (Routing React) ke index.html
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/dist", "index.html"));
+// 4. Koneksi DB + Jalankan Server
+// Kita buat koneksi database berjalan otomatis di setiap request jika belum terhubung
+mongoose
+  .connect(MONGO_URI)
+  .then(() => console.log("✅ Berhasil terhubung ke MongoDB"))
+  .catch((error) => console.log("❌ Gagal konek ke MongoDB:", error.message));
+
+// WAJIB: Biarkan server mendengarkan port secara global agar Vercel Serverless bisa membacanya dengan normal
+app.listen(PORT, () => {
+  console.log(`🚀 Server berjalan di port ${PORT}`);
 });
-
-// 4. Koneksi DB + Jalankan Server (Hanya jika bukan di environment Vercel Production)
-const connectMongoose = async () => {
-  try {
-    await mongoose.connect(MONGO_URI);
-    console.log("✅ Berhasil terhubung ke MongoDB");
-  } catch (error) {
-    console.log("❌ Gagal konek ke MongoDB:", error.message);
-  }
-};
-
-// Hubungkan ke database
-connectMongoose();
-
-// Jika di local komputer, jalankan app.listen biasa
-if (process.env.NODE_ENV !== "production") {
-  app.listen(PORT, () => {
-    console.log(`🚀 Server berjalan di http://localhost:${PORT}`);
-  });
-}
 
 // 5. Export App (WAJIB untuk Vercel Serverless Function)
 module.exports = app;
