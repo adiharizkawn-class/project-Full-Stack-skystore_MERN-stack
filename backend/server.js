@@ -36,14 +36,17 @@ app.get("/api/health", (req, res) => {
   res.status(200).json({ message: "Halo selamat datang di backend skystore" });
 });
 
-// 3. Frontend Static Files (Hanya jika kamu menyatukan build di Express)
-// Baris ini membaca folder hasil build dari frontend Vite kamu
-app.use(express.static(path.join(__dirname, "../frontend/dist")));
+// 3. Frontend Static Files (Menggunakan path dinamis agar aman di Vercel maupun Lokal)
+const frontendPath = process.env.VERCEL
+  ? path.join(process.cwd(), "frontend/dist")
+  : path.join(__dirname, "../frontend/dist");
+
+app.use(express.static(frontendPath));
 
 // 4. Catch-All Route untuk Frontend (PENTING: Harus di bawah routes API & static files)
 // Ini berguna agar saat user refresh halaman seperti /login atau /dashboard, halaman tidak 404
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/dist", "index.html"));
+  res.sendFile(path.join(frontendPath, "index.html"));
 });
 
 // 5. Koneksi DB + Jalankan Server
